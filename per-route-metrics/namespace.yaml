@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: per-route-metrics
+  labels:
+    source: kubectl-apply
+  annotations:
+    linkerd.io/inject: enabled

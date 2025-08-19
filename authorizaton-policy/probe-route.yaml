@@ -1,0 +1,47 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: authors-probe-route
+  namespace: booksapp
+  labels:
+    source: kubectl-apply
+spec:
+  parentRefs:
+    - name: authors-server
+      kind: Server
+      group: policy.linkerd.io
+  rules:
+    - matches:
+      - path:
+          value: "/ping"
+        method: GET 
+---
+apiVersion: policy.linkerd.io/v1alpha1
+kind: NetworkAuthentication
+metadata:
+  name: authors-probe-authn
+  namespace: booksapp
+  labels:
+    source: kubectl-apply
+spec:
+  networks:
+  - cidr: 0.0.0.0/0
+  - cidr: ::/0 
+---
+apiVersion: policy.linkerd.io/v1alpha1
+kind: AuthorizationPolicy
+metadata:
+  name: authors-probe-policy
+  namespace: booksapp
+  labels:
+    source: kubectl-apply
+spec:
+  targetRef:
+    group:  gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: authors-probe-route
+  requiredAuthenticationRefs:
+    - name: authors-probe-authn
+      kind: NetworkAuthentication
+      group: policy.linkerd.io 

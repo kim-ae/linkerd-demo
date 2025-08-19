@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: traffic
+    app.kubernetes.io/part-of: booksapp
+    project: booksapp
+    source: kubectl-apply
+  name: traffic
+  namespace: booksapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traffic
+      project: booksapp
+  template:
+    metadata:
+      annotations:
+        linkerd.io/inject: enabled
+      labels:
+        app: traffic
+        project: booksapp
+    spec:
+      containers:
+      - args:
+        - -initial-delay=30s
+        - webapp:7000
+        image: buoyantio/booksapp-traffic:v0.0.3
+        name: traffic
+      dnsPolicy: ClusterFirst
+      serviceAccountName: traffic
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: traffic
+  namespace: booksapp
+  labels:
+    app: traffic
+    project: booksapp
+    source: kubectl-apply 

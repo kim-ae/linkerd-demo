@@ -1,0 +1,132 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: egress-test
+  labels:
+    source: kubectl-apply
+  annotations:
+    linkerd.io/inject: enabled
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: http-client
+  namespace: egress-test
+  labels:
+    source: kubectl-apply
+    app: http-client
+  annotations:
+    linkerd.io/inject: enabled
+    config.linkerd.io/proxy-metrics-hostname-labels: "true"
+spec:
+  containers:
+  - name: http-client
+    image: curlimages/curl
+    command:
+      - "sh"
+      - "-c"
+      - "while sleep 1; do curl -s -w \"%{errormsg}\" http://httpbin.org/get  ; done"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: https-client
+  namespace: egress-test
+  labels:
+    source: kubectl-apply
+    app: https-client
+  annotations:
+    linkerd.io/inject: enabled
+    config.linkerd.io/proxy-metrics-hostname-labels: "true"
+spec:
+  containers:
+  - name: https-client
+    image: curlimages/curl
+    command:
+      - "sh"
+      - "-c"
+      - "while sleep 1; do curl -s -w \"%{errormsg}\" https://httpbin.org/get  ; done"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: https-client-postman
+  namespace: egress-test
+  labels:
+    source: kubectl-apply
+    app: https-client-postman
+  annotations:
+    linkerd.io/inject: enabled
+    config.linkerd.io/proxy-metrics-hostname-labels: "true"
+spec:
+  containers:
+  - name: https-client-postman
+    image: curlimages/curl
+    command:
+      - "sh"
+      - "-c"
+      - "while sleep 1; do curl -s -w \"%{errormsg}\" https://postman-echo.com/status/200  ; done"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: http-client-postman
+  namespace: egress-test
+  labels:
+    source: kubectl-apply
+    app: http-client-postman
+  annotations:
+    linkerd.io/inject: enabled
+    config.linkerd.io/proxy-metrics-hostname-labels: "true"
+spec:
+  containers:
+  - name: http-client
+    image: curlimages/curl
+    command:
+      - "sh"
+      - "-c"
+      - "while sleep 1; do curl -s -w \"%{errormsg}\" http://postman-echo.com/status/200  ; done"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: internal-egress
+  namespace: egress-test
+spec:
+  type: ClusterIP
+  selector:
+    app: internal-egress
+  ports:
+  - port: 80
+    protocol: TCP
+    name: one
+  - port: 443
+    protocol: TCP
+    name: two
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: egress-test
+  name: internal-egress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: internal-egress
+  template:
+    metadata:
+      labels:
+        app: internal-egress
+      annotations:
+        linkerd.io/inject: enabled
+    spec:
+      containers:
+        - name: legacy-app
+          image: buoyantio/bb:v0.0.5
+          command: [ "sh", "-c"]
+          args:
+          - "/out/bb terminus --h1-server-port 80 --response-text 'You cannot go there right now' --fire-and-forget"
+          ports:
+            - name: http-port
+              containerPort: 80

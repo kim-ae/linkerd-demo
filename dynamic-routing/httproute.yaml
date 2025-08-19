@@ -1,0 +1,24 @@
+apiVersion: policy.linkerd.io/v1beta2
+kind: HTTPRoute
+metadata:
+  name: backend-router
+  namespace: dynamic-routing
+  labels:
+    source: kubectl-apply
+spec:
+  parentRefs:
+    - name: backend-a-podinfo
+      kind: Service
+      group: core
+      port: 9898
+  rules:
+    - matches:
+      - headers:
+        - name: "x-request-id"
+          value: "alternative"
+      backendRefs:
+        - name: "backend-b-podinfo"
+          port: 9898
+    - backendRefs:
+      - name: "backend-a-podinfo"
+        port: 9898

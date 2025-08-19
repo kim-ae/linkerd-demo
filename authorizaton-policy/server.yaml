@@ -1,0 +1,14 @@
+# Enable authorization for authors service - default is deny all
+apiVersion: policy.linkerd.io/v1beta3
+kind: Server
+metadata:
+  name: authors-server
+  namespace: booksapp
+  labels:
+    source: kubectl-apply
+spec:
+  podSelector:
+    matchLabels:
+      app: authors
+      project: booksapp
+  port: service

@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: webapp
+    app.kubernetes.io/part-of: booksapp
+    project: booksapp
+    source: kubectl-apply
+  name: webapp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webapp
+      project: booksapp
+  template:
+    metadata:
+      annotations:
+        linkerd.io/inject: enabled
+      labels:
+        app: webapp
+        app.kubernetes.io/part-of: booksapp
+        project: booksapp
+    spec:
+      containers:
+      - args:
+        - prod:webapp
+        env:
+        - name: DATABASE_URL
+          value: sqlite3:db/db.sqlite3
+        - name: AUTHORS_SITE
+          value: http://authors:7001
+        - name: BOOKS_SITE
+          value: http://books:7002
+        image: buoyantio/booksapp:v0.0.5
+        name: service
+        ports:
+        - containerPort: 7000
+          name: service
+        readinessProbe:
+          httpGet:
+            path: /ping
+            port: 7000
+      dnsPolicy: ClusterFirst
+      serviceAccountName: webapp
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: webapp
+    project: booksapp
+    source: kubectl-apply
+  name: webapp
+spec:
+  ports:
+  - name: service
+    port: 7000
+  selector:
+    app: webapp
+  type: ClusterIP 
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: webapp
+  labels:
+    app: webapp
+    project: booksapp
+    source: kubectl-apply

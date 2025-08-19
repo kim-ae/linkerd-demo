@@ -1,0 +1,10 @@
+---
+apiVersion: policy.linkerd.io/v1alpha1
+kind: EgressNetwork
+metadata:
+  namespace: egress-test
+  name: all-egress-traffic
+  labels:
+    source: kubectl-apply
+spec:
+  trafficPolicy: Allow

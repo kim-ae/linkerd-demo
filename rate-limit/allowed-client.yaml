@@ -1,0 +1,38 @@
+apiVersion: policy.linkerd.io/v1alpha1
+kind: HTTPLocalRateLimitPolicy
+metadata:
+  namespace: emojivoto
+  name: web-http
+spec:
+  targetRef:
+    group: policy.linkerd.io
+    kind: Server
+    name: web-http
+  identity:
+    requestsPerSecond: 4
+  overrides:
+  - requestsPerSecond: 6
+    clientRefs:
+    - kind: ServiceAccount
+      namespace: emojivoto
+      name: default
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: allowed-client
+  namespace: emojivoto
+  labels:
+    source: kubectl-apply
+    app: allowed-client
+  annotations:
+    linkerd.io/inject: enabled
+    config.linkerd.io/proxy-metrics-hostname-labels: "true"
+spec:
+  containers:
+  - name: http-client
+    image: curlimages/curl
+    command:
+      - "sh"
+      - "-c"
+      - "while sleep 0.25; do curl -s -o /dev/null -w \"%{http_code}\\n\" \"http://web-svc.emojivoto\" ; done"

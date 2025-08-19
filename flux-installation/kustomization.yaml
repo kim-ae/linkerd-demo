@@ -1,0 +1,5 @@
+resources:
+  - linkerd-control-plane-helm-release.yaml
+  - linkerd-helm-repository.yaml
+  - linkerd-crds-helm-release.yaml
+  - linkerd-viz-helm-release.yaml

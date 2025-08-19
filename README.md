@@ -85,4 +85,4 @@ Located in `/rate-limit`
 - Examples of rate limiting configuration
 - Shows how to protect services from overwhelming traffic
 - Demonstrates rate limit policies and their effects
-# linkerd-demo
+
